@@ -1,13 +1,50 @@
-function overall_voltage = batt_voltage(voltage_per_cell, no_cells)
-overall_voltage = voltage_per_cell * no_cells;
+% Replace 'filename.csv' with the path to your CSV file
+data = readtable('Log_2024-11-08_185205.csv');
+
+% Extract the throttle and thrust data from the table
+throttle = (data.ESCSignal__s_ - 1000) ./ 10;  % Adjust if the column name differs
+thrust = -1 .* data.Thrust_kgf_;      % Adjust if the column name differs
+pwr = data.ElectricalPower_W_;
+
+% Find the index of the first NaN in throttle
+nanIndex = find(isnan(throttle), 1);
+
+% If there's a NaN, truncate throttle and thrust at the first NaN
+if ~isempty(nanIndex)
+    throttle = throttle(1:nanIndex-1);
+    thrust = thrust(1:nanIndex-1);
+    pwr = pwr(1:nanIndex-1);
 end
 
-function flight_duration_50 = flighttime(voltage, amphours, power_consumed_50, ...
-    no_motors, battery_max_usage, motor_allocation)
-watthr = voltage * amphours;
-usable_watthr = (battery_max_usage * watthr);
-watthr_alloc_motor = usable_watthr * motor_allocation;
-tot_pwr_consumed = no_motors * power_consumed_50;
+threshold = 100;
+indeces = throttle <= threshold;
 
-flight_duration_50 = watthr_alloc_motor / tot_pwr_consumed;
-end
+throttle = throttle(indeces);
+pwr = pwr(indeces);
+thrust = thrust(indeces);
+    
+% Define custom model, e.g., exponential model: thrust = a * exp(b * throttle)
+[throttle_thrust, gof_tht] = fit(throttle, thrust, 'poly3');
+[throttle_power, gof_thp] = fit(throttle, pwr, 'poly3');
+[thrust_power, gof_tp] = fit(thrust, pwr, 'poly2');
+gof_thp
+% gof_tp
+% gof_tht
+% Plot data and fit
+figure;
+plot(throttle_power, throttle, pwr);
+xlabel('Throttle (%)');
+ylabel('Thrust (N)');
+title('Throttle vs. Thrust with Fit');
+grid on;
+
+% save('throttle-thrust_fun', "throttle_thrust")
+
+% % Plotting throttle vs thrust
+% figure;
+% plot(throttle, thrust, '-o', 'LineWidth', 1.5);
+% xlabel('Throttle (%)');
+% ylabel('Thrust (kgf)');
+% title('Throttle vs. Thrust');
+% grid on; 
+
