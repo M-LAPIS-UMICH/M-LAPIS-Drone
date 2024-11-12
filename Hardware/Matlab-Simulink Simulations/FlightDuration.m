@@ -38,7 +38,7 @@ ylabel('Thrust (N)');
 title('Throttle vs. Thrust with Fit');
 grid on;
 
-% save('throttle-thrust_fun', "throttle_thrust")
+save('throttle-thrust_fun', "throttle_thrust", "throttle_power", "thrust_power")
 
 % % Plotting throttle vs thrust
 % figure;
