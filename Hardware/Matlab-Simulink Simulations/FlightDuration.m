@@ -39,8 +39,8 @@ thrust = thrust(lower_indeces);
 % gof_tht
 % Plot data and fit
 
-usable_battery_watthr = 100; % placeholder
-flight_duration_data = usable_battery_watthr ./ pwr;
+usable_battery_watthr = 133; % placeholder
+flight_duration_data = 60 .* (usable_battery_watthr ./ pwr);
 % Define the custom fit type as 1 / (a*x + b)
 fitType = fittype('1 / (a * x + b)', 'independent', 'x', 'coefficients', {'a', 'b'});
 
@@ -52,8 +52,8 @@ figure;
 plot(flight_duration, throttle, flight_duration_data);
 % plot(throttle_power, throttle, pwr);
 xlabel('Throttle (%)');
-ylabel('Thrust (N)');
-title('Throttle vs. Thrust with Fit');
+ylabel('Flight Duration (min)');
+title('Throttle vs. Flight Duration with Fit');
 grid on;
 
 save('throttle-thrust_fun', "throttle_thrust", "throttle_power", "thrust_power")
