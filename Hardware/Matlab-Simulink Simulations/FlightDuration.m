@@ -1,10 +1,11 @@
 % Replace 'filename.csv' with the path to your CSV file
-data = readtable('Log_2024-11-08_185205.csv');
-
+%data = readtable('Heavy Drone.csv');
+data = readtable('Heavy Drone.csv');
 % Extract the throttle and thrust data from the table
 throttle = (data.ESCSignal__s_ - 1000) ./ 10;  % Adjust if the column name differs
 thrust = -1 .* data.Thrust_kgf_;      % Adjust if the column name differs
 pwr = data.ElectricalPower_W_;
+efficiency = data.MotorEfficiency___;
 
 % Find the index of the first NaN in throttle
 nanIndex = find(isnan(throttle), 1);
@@ -22,6 +23,7 @@ upper_indeces = throttle <= upper_threshold;
 throttle = throttle(upper_indeces);
 pwr = pwr(upper_indeces);
 thrust = thrust(upper_indeces);
+efficiency = efficiency(upper_indeces);
 
 lower_threshold = 20;
 lower_indeces = throttle > lower_threshold;
@@ -29,17 +31,19 @@ lower_indeces = throttle > lower_threshold;
 throttle = throttle(lower_indeces);
 pwr = pwr(lower_indeces);
 thrust = thrust(lower_indeces);
+efficiency = efficiency(lower_indeces);
     
 % Define custom model, e.g., exponential model: thrust = a * exp(b * throttle)
 [throttle_thrust, gof_tht] = fit(throttle, thrust, 'poly3');
-[throttle_power, gof_thp] = fit(throttle, pwr, 'poly3');
+[throttle_power, gof_thp] = fit(throttle, pwr, 'poly3');    
 [thrust_power, gof_tp] = fit(thrust, pwr, 'poly2');
+[throttle_efficiency, gof_the] = fit(throttle, efficiency, 'poly3');
 % gof_thp
 % gof_tp
 % gof_tht
 % Plot data and fit
 
-usable_battery_watthr = 133; % placeholder
+usable_battery_watthr = 202; % placeholder
 flight_duration_data = 60 .* (usable_battery_watthr ./ pwr);
 % Define the custom fit type as 1 / (a*x + b)
 fitType = fittype('1 / (a * x + b)', 'independent', 'x', 'coefficients', {'a', 'b'});
@@ -50,7 +54,10 @@ gof_fd
 
 figure;
 plot(flight_duration, throttle, flight_duration_data);
-% plot(throttle_power, throttle, pwr);
+%plot(throttle_power, throttle, pwr);
+% plot(throttle_thrust, throttle, thrust);
+% plot(throttle_efficiency, throttle, efficiency)
+
 xlabel('Throttle (%)');
 ylabel('Flight Duration (min)');
 title('Throttle vs. Flight Duration with Fit');
