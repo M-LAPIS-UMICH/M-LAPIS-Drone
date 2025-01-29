@@ -1,14 +1,20 @@
 % Replace 'filename.csv' with the path to your CSV file
 %data = readtable('Heavy Drone.csv'); 
-data = readtable('Log_2024-11-08_185205.csv');
+data = readtable("COMPLETE DATA!!\Light Drone.csv");
 % Extract the throttle and thrust data from the table
 %display(data.ESCSignal__s_ - max(data.ESCSignal__s_))
 throttle = (data.ESCSignal__s_ - min(data.ESCSignal__s_)) ./ 10;  % Adjust if the column name differs
-thrust = -1 .* data.Thrust_kgf_;      % Adjust if the column name differs
+throttle_norm = @(x) (100/max(throttle))*x;
+throttle = throttle_norm(throttle);
+%display(data.Thrust_kgf_)
+thrust = data.Thrust_kgf_(:);      % Adjust if the column name differs
+
+%display(thrust)
 pwr = data.ElectricalPower_W_;
 efficiency = data.MotorEfficiency___;
 current_draw = data.Current_A_;
 RPM = data.MotorElectricalSpeed_RPM_;
+voltage = data.Voltage_V_;
 
 % Find the index of the first NaN in throttle
 nanIndex = find(isnan(throttle), 1);
@@ -19,7 +25,6 @@ if ~isempty(nanIndex)
     thrust = thrust(1:nanIndex-1);
     pwr = pwr(1:nanIndex-1);
 end
-display(throttle)
 
 upper_threshold = 100;
 upper_indeces = throttle <= upper_threshold;
@@ -30,8 +35,9 @@ thrust = thrust(upper_indeces);
 efficiency = efficiency(upper_indeces);
 current_draw = current_draw(upper_indeces);
 RPM = RPM(upper_indeces);
+voltage = voltage(upper_indeces);
 
-lower_threshold = 80;
+lower_threshold = 20;
 lower_indeces = throttle > lower_threshold;
 
 throttle = throttle(lower_indeces);
@@ -40,15 +46,27 @@ thrust = thrust(lower_indeces);
 efficiency = efficiency(lower_indeces);
 current_draw = current_draw(lower_indeces);
 RPM = RPM(lower_indeces);
+voltage = voltage(lower_indeces);
     
 % Define custom model, e.g., exponential model: thrust = a * exp(b * throttle)
+%display(thrust)
+
 [throttle_thrust, gof_tht] = fit(throttle, thrust, 'poly3');
 [throttle_power, gof_thp] = fit(throttle, pwr, 'poly3');
 [throttle_current, gof_thc] = fit(throttle, current_draw, 'poly3');
 [throttle_RPM, gof_thrpm] = fit(throttle, RPM, 'poly3');
-
-[thrust_power, gof_tp] = fit(thrust, pwr, 'poly2');
 [throttle_efficiency, gof_the] = fit(throttle, efficiency, 'poly3');
+[throttle_voltage, gof_thv] = fit(throttle, voltage, 'poly1');
+
+[thrust_current, gof_tc] = fit(thrust, current_draw, 'poly3');
+[thrust_RPM, gof_trpm] = fit(thrust, RPM, 'poly3');
+[thrust_power, gof_tp] = fit(thrust, pwr, 'poly2');
+[thrust_efficiency, gof_te] = fit(thrust, efficiency, 'poly3');
+gof_thv
+%gof_tc
+%gof_trpm
+%gof_tp
+%gof_te
 % gof_thp
 % gof_tp
 % gof_tht
@@ -64,18 +82,20 @@ fitType = fittype('1 / (a * x + b)', 'independent', 'x', 'coefficients', {'a', '
 gof_thc
 
 figure;
-%plot(flight_duration, throttle, flight_duration_data);
-%plot(throttle_power, throttle, pwr);
-% plot(throttle_thrust, throttle, thrust);
-% plot(throttle_efficiency, throttle, efficiency);
-plot(throttle_current, throttle, current_draw);
+% plot(flight_duration, throttle, flight_duration_data);
+plot(thrust_power, thrust, pwr);
+%plot(throttle_thrust, throttle, thrust);
+% plot(thrust_efficiency, thrust, efficiency);
+%plot(throttle_current, throttle, current_draw);
+%plot(throttle_voltage, throttle, voltage);
+%xlabel('Throttle (%)');
+%ylabel('Flight Duration (min)');
+%title('Throttle vs. Flight Duration with Fit');
+%grid on;
 
-xlabel('Throttle (%)');
-ylabel('Flight Duration (min)');
-title('Throttle vs. Flight Duration with Fit');
-grid on;
-
-save('throttle-thrust_fun', "throttle_thrust", "throttle_power", "thrust_power")
+save(strcat("Light Drone", '.mat'), "throttle_thrust", "throttle_power", ...
+    "thrust_power", "throttle_current", "throttle_efficiency", "throttle_RPM", ...
+    "thrust_current", "thrust_efficiency", "thrust_RPM", "throttle_voltage")
 
 % % Plotting throttle vs thrust
 % figure;
@@ -83,5 +103,5 @@ save('throttle-thrust_fun', "throttle_thrust", "throttle_power", "thrust_power")
 % xlabel('Throttle (%)');
 % ylabel('Thrust (kgf)');
 % title('Throttle vs. Thrust');
-% grid on; 
+% grid on;
 
