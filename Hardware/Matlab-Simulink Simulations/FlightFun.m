@@ -72,14 +72,14 @@ voltage = voltage(lower_indeces);
 % gof_tht
 % Plot data and fit
 
-usable_battery_watthr = 202; % placeholder
-flight_duration_data = 60 .* (usable_battery_watthr ./ pwr);
-% Define the custom fit type as 1 / (a*x + b)
-fitType = fittype('1 / (a * x + b)', 'independent', 'x', 'coefficients', {'a', 'b'});
-
-% Fit the data
-[flight_duration, gof_fd] = fit(throttle, flight_duration_data, fitType);
-gof_thc
+% usable_battery_watthr = 202; % placeholder
+% flight_duration_data = 60 .* (usable_battery_watthr ./ pwr);
+% % Define the custom fit type as 1 / (a*x + b)
+% fitType = fittype('1 / (a * x + b)', 'independent', 'x', 'coefficients', {'a', 'b'});
+% 
+% % Fit the data
+% [flight_duration, gof_fd] = fit(throttle, flight_duration_data, fitType);
+% gof_thc
 
 %figure;
 % plot(flight_duration, throttle, flight_duration_data);
@@ -93,9 +93,15 @@ gof_thc
 %title('Throttle vs. Flight Duration with Fit');
 %grid on;
 
+duration_thrust = @(battery_capacity, no_motors, drone_weight) battery_capacity / (no_motors*thrust_power(drone_weight/no_motors));
+
+slv = @(battery_capacity, no_motors, duration, x) duration_thrust(battery_capacity, no_motors, x) - duration;
+
+inv_duration_thrust = @(battery_capacity, no_motors, duration) fzero(@(x) (duration_thrust(battery_capacity, no_motors, x) - duration), 0)
+
 save(strcat(filename, '.mat'), "throttle_thrust", "throttle_power", ...
     "thrust_power", "throttle_current", "throttle_efficiency", "throttle_RPM", ...
-    "thrust_current", "thrust_efficiency", "thrust_RPM", "throttle_voltage")
+    "thrust_current", "thrust_efficiency", "thrust_RPM", "throttle_voltage", "duration_thrust", "inv_duration_thrust")
 
 % % Plotting throttle vs thrust
 % figure;
