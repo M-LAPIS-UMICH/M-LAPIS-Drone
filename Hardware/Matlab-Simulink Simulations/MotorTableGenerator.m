@@ -10,22 +10,22 @@ for k = 1:length(fileList)
     % Get the file name
     filePath = strcat(fileList(k).folder, '\', fileList(k).name);
     display(filePath)
-    
-    FlightFun(filePath, fileList(k).name)
+    filename = regexp(fileList(k).name, '^[^.]+', 'match', 'once'); % Extract part before first '.'
+    FlightFun(filePath, filename)
 
-    mat = load(strcat(fileList(k).name, ".mat"));
+    mat = load(fullfile(filename, strcat(filename, ".mat")));
     final_table = [50 65 75 85 100];
     current = [];
     power = [];
     mthrust = [];
-    mRPM = [];
+    %mRPM = [];
     mefficiency = [];
     mvoltage = [];
     for v = 1:5
         current = [current mat.throttle_current(final_table(v))];
         power = [power mat.throttle_power(final_table(v))];
         mthrust = [mthrust mat.throttle_thrust(final_table(v))];
-        mRPM = [mRPM mat.throttle_RPM(final_table(v))];
+        %mRPM = [mRPM mat.throttle_RPM(final_table(v))];
         mefficiency = [mefficiency mat.throttle_efficiency(final_table(v))];
         mvoltage = [mvoltage mat.throttle_voltage(final_table(v))];
     end
@@ -43,5 +43,5 @@ uit.Position(4) = fig.Position(4) - 80;
 frame = getframe(fig); % Get the current figure window
 imageData = frame2im(frame); % Convert the frame to an image
 % Save the image as a PNG file
-imwrite(imageData, strcat(fileList(k).name, '.png'));
+imwrite(imageData, fullfile(filename, strcat(filename, '.png')));
 end

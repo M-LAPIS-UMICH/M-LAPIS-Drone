@@ -84,6 +84,10 @@ gof_thc
 figure;
 % plot(flight_duration, throttle, flight_duration_data);
 plot(thrust_power, thrust, pwr);
+title('Thrust vs Power')
+xlabel('Thrust (kgf)')
+ylabel('Power (W)')
+saveas(gcf, '');
 %plot(throttle_thrust, throttle, thrust);
 % plot(thrust_efficiency, thrust, efficiency);
 %plot(throttle_current, throttle, current_draw);

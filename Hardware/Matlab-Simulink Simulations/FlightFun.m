@@ -1,6 +1,10 @@
 function [outputArg1] = FlightFun(inputArg1, filename)
 % Replace 'filename.csv' with the path to your CSV file
 %data = readtable('Heavy Drone.csv'); 
+
+if ~exist(filename, 'dir')
+    mkdir(filename);
+end
 data = readtable(inputArg1);
 % Extract the throttle and thrust data from the table
 %display(data.ESCSignal__s_ - max(data.ESCSignal__s_))
@@ -81,13 +85,17 @@ voltage = voltage(lower_indeces);
 % [flight_duration, gof_fd] = fit(throttle, flight_duration_data, fitType);
 % gof_thc
 
-%figure;
+figure;
 % plot(flight_duration, throttle, flight_duration_data);
-% plot(thrust_power, thrust, pwr);
+plot(thrust_power, thrust, pwr);
+title('Thrust vs Power')
+xlabel('Thrust (kgf)')
+ylabel('Power (W)')
+saveas(gcf, fullfile(filename, 'thrust-power_plot.png'));
 %plot(throttle_thrust, throttle, thrust);
 % plot(thrust_efficiency, thrust, efficiency);
 %plot(throttle_current, throttle, current_draw);
-
+close(gcf)
 %xlabel('Throttle (%)');
 %ylabel('Flight Duration (min)');
 %title('Throttle vs. Flight Duration with Fit');
@@ -95,13 +103,9 @@ voltage = voltage(lower_indeces);
 
 duration_thrust = @(battery_capacity, no_motors, drone_weight) battery_capacity / (no_motors*thrust_power(drone_weight/no_motors));
 
-slv = @(battery_capacity, no_motors, duration, x) duration_thrust(battery_capacity, no_motors, x) - duration;
-
-inv_duration_thrust = @(battery_capacity, no_motors, duration) fzero(@(x) (duration_thrust(battery_capacity, no_motors, x) - duration), 0)
-
-save(strcat(filename, '.mat'), "throttle_thrust", "throttle_power", ...
+save(strcat(fullfile(filename, filename), '.mat'), "throttle_thrust", "throttle_power", ...
     "thrust_power", "throttle_current", "throttle_efficiency", "throttle_RPM", ...
-    "thrust_current", "thrust_efficiency", "thrust_RPM", "throttle_voltage", "duration_thrust", "inv_duration_thrust")
+    "thrust_current", "thrust_efficiency", "thrust_RPM", "throttle_voltage", "duration_thrust")
 
 % % Plotting throttle vs thrust
 % figure;
@@ -110,6 +114,5 @@ save(strcat(filename, '.mat'), "throttle_thrust", "throttle_power", ...
 % ylabel('Thrust (kgf)');
 % title('Throttle vs. Thrust');
 % grid on;
-
 end
 
